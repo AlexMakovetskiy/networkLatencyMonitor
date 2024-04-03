@@ -18,24 +18,28 @@ const ResponseTime = () => {
         timestamps: [getCurrentTime()]
     });
 
-    const [cctldResponseData, setCctldResponseData] = useState<ResponseData>({
+    const [jitterData, setJitterData] = useState<ResponseData>({
         responseTime: [0],
         timestamps: [getCurrentTime()]
     });
+
+    const jitterToggler = googleResponseData.responseTime[0];
 
     ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
 
     useEffect(() => {
         const interval = setInterval( () => {
-            ping.ping('https://www.google.com', (error: Error, data: number) => {
+            ping.ping('https://www.google.com', async (error: Error, data: number) => {
                 if (error) {
                     console.log("error loading resource", error);
                 }
 
-                setGoogleResponseData((prevState) => {
+                const currentTime = getCurrentTime();
+
+                await setGoogleResponseData((prevState) => {
                     const newData = {
                         responseTime: [...prevState.responseTime, data],
-                        timestamps: [...prevState.timestamps, getCurrentTime()],
+                        timestamps: [...prevState.timestamps, currentTime],
                     }
 
                     if(newData.responseTime.length > 15) {
@@ -45,49 +49,55 @@ const ResponseTime = () => {
                         }
                     }
                     return newData;
-                }
-                );
+                });
+
+
             }
             )
         }, 5000);
     
         return () => {
-            clearInterval(interval);
+            clearInterval(interval); 
         };
     }, []);
 
     useEffect(() => {
-        const interval = setInterval( () => {
-            ping.ping('https://cctld.by', (error: Error, data: number) => {
-                if (error) {
-                    console.log("error loading resource", error);
-                }
-
-                setCctldResponseData((prevState) => {
-                    const newData = {
-                        responseTime: [...prevState.responseTime, data],
-                        timestamps: [...prevState.timestamps, getCurrentTime()],
-                    }
-
-                    if(newData.responseTime.length > 15) {
-                        return {
-                            responseTime: newData.responseTime.filter((_, index) => index !== 0),
-                            timestamps: newData.timestamps.filter((_, index) => index !== 0)
-                        }
-                    }
-                    return newData;
-                }
-                );
-            }
-            )
-        }, 5000);
+        function getLastResponseTimeValue(): number {
+            return Math.round(+googleResponseData.responseTime[googleResponseData.responseTime.length - 1]);
+        }
     
+        function getPreLastResponseTimeValue(): number {
+            return Math.round(+googleResponseData.responseTime[googleResponseData.responseTime.length - 2]);
+        }
+        const interval = setInterval( () => {
+            const currentTime = getCurrentTime();
+            
+            setJitterData((prevState) => {
+                const jitterValue = Math.abs(getPreLastResponseTimeValue() - getLastResponseTimeValue());
+
+                console.log(jitterValue); 
+
+                const newData = {
+                    responseTime: [...prevState.responseTime, +jitterValue],
+                    timestamps: [...prevState.timestamps, currentTime],
+                }
+
+                if(newData.responseTime.length > 15) {
+                    return {
+                        responseTime: newData.responseTime.filter((_, index) => index !== 0),
+                        timestamps: newData.timestamps.filter((_, index) => index !== 0)
+                    }
+                }
+
+                return newData;
+            });
+        }, 5000);
+
         return () => {
             clearInterval(interval);
         };
-    }, []);
-
-    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [jitterToggler]);
 
     const googleChartData = {
         labels: googleResponseData.timestamps,
@@ -98,17 +108,16 @@ const ResponseTime = () => {
                 fill: false,
                 borderColor: 'rgba(75, 192, 192, 1)',
                 tension: 0,
-
             }
         ]
     };
 
-    const cctldChartData = {
-        labels: cctldResponseData.timestamps,
+    const jitterChartData = {
+        labels: jitterData.timestamps,
         datasets: [
             {
                 label: 'RTT',
-                data: cctldResponseData.responseTime,
+                data: jitterData.responseTime,
                 fill: false,
                 borderColor: 'rgba(100, 190, 150, 1)',
                 tension: 0
@@ -116,7 +125,7 @@ const ResponseTime = () => {
         ]
     };
 
-    const chartOptions = {
+    const responseChartOptions = {
         scales: {
             y: {
                 max: 500
@@ -124,12 +133,20 @@ const ResponseTime = () => {
         }
     };
 
+    const jitterChartOptions = {
+        scales: {
+            y: {
+                max: 50
+            }
+        }
+    };
+
     return (
         <div>
             <p>google.com (Washington - USA)</p>
-            <Line data={googleChartData} options={chartOptions} style={{width: "700px"}}/> <br /> <br />
-            <p>cctld.by (Minsk - Belarus)</p>
-            <Line data={cctldChartData} options={chartOptions} style={{width: "700px"}}/> <br /> <br />
+            <Line data={googleChartData} options={responseChartOptions} style={{width: "700px"}}/> <br /> <br />
+            <p>jitter</p>
+            <Line data={jitterChartData} options={jitterChartOptions} style={{width: "700px"}}/> <br /> <br />
         </div>
     );
 };

@@ -3,7 +3,9 @@ import Ping from "ping.js";
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement } from "chart.js";
 
-import { getCurrentTime } from '../utils/rttUtils';
+import { getContinuityStatus, getCurrentTime } from '../utils/rttUtils';
+
+import "./responseTime.css";
 
 const ping = new Ping();
 
@@ -22,6 +24,8 @@ const ResponseTime = () => {
         responseTime: [0],
         timestamps: [getCurrentTime()]
     });
+
+    const [continuityStatus, setContinuityStatus] = useState<number>(0);
 
     const jitterToggler = googleResponseData.responseTime[0];
 
@@ -51,6 +55,7 @@ const ResponseTime = () => {
                     return newData;
                 });
 
+                setContinuityStatus(getContinuityStatus(googleResponseData.responseTime));
 
             }
             )
@@ -59,6 +64,7 @@ const ResponseTime = () => {
         return () => {
             clearInterval(interval); 
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -69,13 +75,13 @@ const ResponseTime = () => {
         function getPreLastResponseTimeValue(): number {
             return Math.round(+googleResponseData.responseTime[googleResponseData.responseTime.length - 2]);
         }
+
         const interval = setInterval( () => {
             const currentTime = getCurrentTime();
             
             setJitterData((prevState) => {
                 const jitterValue = Math.abs(getPreLastResponseTimeValue() - getLastResponseTimeValue());
 
-                console.log(jitterValue); 
 
                 const newData = {
                     responseTime: [...prevState.responseTime, +jitterValue],
@@ -98,6 +104,17 @@ const ResponseTime = () => {
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [jitterToggler]);
+
+    // useEffect(() => {
+    //     const interval = setInterval( () => {
+    //         setContinuityStatus(getContinuityStatus(googleResponseData.responseTime));
+    //     }, 5000);
+    
+    //     return () => {
+    //         clearInterval(interval); 
+    //     };
+    // // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, [googleResponseData.responseTime[0]]);
 
     const googleChartData = {
         labels: googleResponseData.timestamps,
@@ -142,11 +159,17 @@ const ResponseTime = () => {
     };
 
     return (
-        <div>
-            <p>google.com (Washington - USA)</p>
-            <Line data={googleChartData} options={responseChartOptions} style={{width: "700px"}}/> <br /> <br />
-            <p>jitter</p>
-            <Line data={jitterChartData} options={jitterChartOptions} style={{width: "700px"}}/> <br /> <br />
+        <div className='networkStatusWrap'>
+            <div>
+                <p>Latency: google.com (Washington - USA)</p>
+                <Line data={googleChartData} options={responseChartOptions} style={{width: "700px"}}/> <br />
+                <p>jitter</p>
+                <Line data={jitterChartData} options={jitterChartOptions} style={{width: "700px"}}/> 
+            </div>
+            <div>
+                <p>Continuity: {continuityStatus}% </p>
+                <p>Stability: </p>
+            </div>
         </div>
     );
 };

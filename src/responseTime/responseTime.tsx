@@ -4,7 +4,7 @@ import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement } from "chart.js";
 
 import { getContinuityStatus, getCurrentTime } from '../utils/rttUtils';
-import { defaultHost, hostPattern } from '../helpers/responseTime';
+import { defaultHost, hostPattern } from '../helpers/ResponseTime1';
 
 import "./responseTime.css";
 
@@ -19,7 +19,7 @@ const ResponseTime = () => {
     const [hostName, sethostName] = useState(defaultHost);
     const [googleResponseData, setGoogleResponseData] = useState<ResponseData>({
         responseTime: [0],
-        timestamps: [getCurrentTime()]
+        timestamps: [getCurrentTime()] 
     });
 
     const [jitterData, setJitterData] = useState<ResponseData>({

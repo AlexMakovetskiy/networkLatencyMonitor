@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import Ping from "ping.js";
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement } from "chart.js";
 
 import { getContinuityStatus, getCurrentTime } from '../utils/rttUtils';
+import { defaultHost, hostPattern } from '../helpers/responseTime';
 
 import "./responseTime.css";
 
@@ -15,8 +16,6 @@ type ResponseData = {
 }
 
 const ResponseTime = () => {
-    const defaultHost = "https://www.google.com";
-
     const [hostName, sethostName] = useState(defaultHost);
     const [googleResponseData, setGoogleResponseData] = useState<ResponseData>({
         responseTime: [0],
@@ -57,13 +56,9 @@ const ResponseTime = () => {
                     }
                     return newData;
                 });
-
-                
-
-            }
-            )
+            })
         }, 5000);
-    
+
         return () => {
             clearInterval(interval); 
         };
@@ -154,16 +149,22 @@ const ResponseTime = () => {
         }
     };
 
+    function handleHostNameChange(event: ChangeEvent<HTMLInputElement>) {
+        const hostInputValue = event.target.value;
+
+        return sethostName(hostPattern.test(hostInputValue) ? hostInputValue : "");
+    }
+
     return (
         <div className="networkStatusWrap">
             <header>
                 <h1>Network status monitor</h1>
             </header>
             <div className="networkStatusContainer">
-                    <h3>Stability: {continuityStatus}% </h3>
+                    <h3>Stability: {continuityStatus}%</h3>
                 <div className="chartListWrap">
                     <div>
-                        <span>Latency <input type="text" value={hostName} /></span>
+                        <span>Latency <input type="text" value={hostName} onChange={handleHostNameChange}/></span>
                         <Line data={googleChartData} options={responseChartOptions} style={{width: "700px"}}/> <br />
                     </div>
                     <div>

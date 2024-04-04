@@ -3,20 +3,15 @@ export function getCurrentTime() {
 }
 
 export function getContinuityStatus(latencyValueList: number[]): number {
-    const continuityNumber: number = latencyValueList.reduce((acc, currLatencyValue) => {
-        if(currLatencyValue < 100) {
-            return acc + 1;
+    let continuityNumber = 0;
+
+    const length = latencyValueList.length;
+
+    for (let i = 0; i < length; i++) {
+        if (latencyValueList[i] < 100) {
+            continuityNumber++;
         }
-        return acc;
-    }, 0);
+    }
 
-    // console.log(latencyValueList);
-    
-    // console.log(continuityNumber);
-
-    // console.log(latencyValueList?.length);
-    
-    
-    
-    return Math.ceil(continuityNumber / latencyValueList?.length ?? 0);
+    return Math.ceil((continuityNumber / length) * 100 || 0);
 }

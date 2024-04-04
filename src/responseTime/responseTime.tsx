@@ -15,6 +15,9 @@ type ResponseData = {
 }
 
 const ResponseTime = () => {
+    const defaultHost = "https://www.google.com";
+
+    const [hostName, sethostName] = useState(defaultHost);
     const [googleResponseData, setGoogleResponseData] = useState<ResponseData>({
         responseTime: [0],
         timestamps: [getCurrentTime()]
@@ -33,7 +36,7 @@ const ResponseTime = () => {
 
     useEffect(() => {
         const interval = setInterval( () => {
-            ping.ping('https://www.google.com', async (error: Error, data: number) => {
+            ping.ping(hostName, async (error: Error, data: number) => {
                 if (error) {
                     console.log("error loading resource", error);
                 }
@@ -55,7 +58,7 @@ const ResponseTime = () => {
                     return newData;
                 });
 
-                setContinuityStatus(getContinuityStatus(googleResponseData.responseTime));
+                
 
             }
             )
@@ -69,19 +72,18 @@ const ResponseTime = () => {
 
     useEffect(() => {
         function getLastResponseTimeValue(): number {
-            return Math.round(+googleResponseData.responseTime[googleResponseData.responseTime.length - 1]);
+            return Math.round(googleResponseData.responseTime[googleResponseData.responseTime.length - 1] ?? 0);
         }
     
         function getPreLastResponseTimeValue(): number {
-            return Math.round(+googleResponseData.responseTime[googleResponseData.responseTime.length - 2]);
+            return Math.round(googleResponseData.responseTime[googleResponseData.responseTime.length - 2] ?? 0);
         }
 
         const interval = setInterval( () => {
             const currentTime = getCurrentTime();
-            
-            setJitterData((prevState) => {
-                const jitterValue = Math.abs(getPreLastResponseTimeValue() - getLastResponseTimeValue());
 
+            return setJitterData((prevState) => {
+                const jitterValue = Math.abs(getPreLastResponseTimeValue() - getLastResponseTimeValue());
 
                 const newData = {
                     responseTime: [...prevState.responseTime, +jitterValue],
@@ -105,16 +107,10 @@ const ResponseTime = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [jitterToggler]);
 
-    // useEffect(() => {
-    //     const interval = setInterval( () => {
-    //         setContinuityStatus(getContinuityStatus(googleResponseData.responseTime));
-    //     }, 5000);
-    
-    //     return () => {
-    //         clearInterval(interval); 
-    //     };
-    // // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, [googleResponseData.responseTime[0]]);
+    useEffect(() => {
+            setContinuityStatus(getContinuityStatus(googleResponseData.responseTime));
+    }, [googleResponseData.responseTime, jitterToggler]);
+
 
     const googleChartData = {
         labels: googleResponseData.timestamps,
@@ -159,16 +155,22 @@ const ResponseTime = () => {
     };
 
     return (
-        <div className='networkStatusWrap'>
-            <div>
-                <p>Latency: google.com (Washington - USA)</p>
-                <Line data={googleChartData} options={responseChartOptions} style={{width: "700px"}}/> <br />
-                <p>jitter</p>
-                <Line data={jitterChartData} options={jitterChartOptions} style={{width: "700px"}}/> 
-            </div>
-            <div>
-                <p>Continuity: {continuityStatus}% </p>
-                <p>Stability: </p>
+        <div className="networkStatusWrap">
+            <header>
+                <h1>Network status monitor</h1>
+            </header>
+            <div className="networkStatusContainer">
+                    <h3>Stability: {continuityStatus}% </h3>
+                <div className="chartListWrap">
+                    <div>
+                        <span>Latency <input type="text" value={hostName} /></span>
+                        <Line data={googleChartData} options={responseChartOptions} style={{width: "700px"}}/> <br />
+                    </div>
+                    <div>
+                        <p>Jitter</p>
+                        <Line data={jitterChartData} options={jitterChartOptions} style={{width: "700px"}}/> 
+                    </div>
+                </div>
             </div>
         </div>
     );

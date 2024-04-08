@@ -1,16 +1,15 @@
+import ResponseTime from "./responseTime/ResponseTime";
 
-import ResponseTime from './responseTime/responseTime'
-
-import './App.css'
+import "./App.css";
 
 function App() {
-  return (
-    <>
-      <div>
-        <ResponseTime/>
-      </div>
-    </>
-  )
+	return (
+		<>
+			<div>
+				<ResponseTime />
+			</div>
+		</>
+	);
 }
 
-export default App
+export default App;

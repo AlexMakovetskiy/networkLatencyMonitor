@@ -6,7 +6,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 import { getContinuityStatus, getCurrentTime } from '../utils/rttUtils';
 import { defaultHost, hostPattern } from '../helpers/ResponseTime1';
 
-import "./responseTime.css";
+import styles from "./responseTime.module.css";
 
 const ping = new Ping();
 
@@ -16,7 +16,8 @@ type ResponseData = {
 }
 
 const ResponseTime = () => {
-    const [hostName, sethostName] = useState(defaultHost);
+    const [hostName, sethostName] = useState<string>(defaultHost);
+    const [windowWidth, setWindowWidth] = useState<number>(window.innerWidth);
     const [googleResponseData, setGoogleResponseData] = useState<ResponseData>({
         responseTime: [0],
         timestamps: [getCurrentTime()] 
@@ -32,6 +33,18 @@ const ResponseTime = () => {
     const jitterToggler = googleResponseData.responseTime[0];
 
     ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
+
+    useEffect(() => {
+		const handleResize = () => {
+			setWindowWidth(window.innerWidth);
+		};
+
+		window.addEventListener("resize", handleResize);
+
+		return () => {
+			window.removeEventListener("resize", handleResize);
+		};
+	}, []);
 
     useEffect(() => {
         const interval = setInterval( () => {
@@ -149,6 +162,30 @@ const ResponseTime = () => {
         }
     };
 
+    function getChartWidth(): number {
+        if(windowWidth <= 380) {
+            return 280;
+        }
+
+        if(windowWidth <= 500) {
+            return 300;
+        }
+
+        if(windowWidth <= 1150) {
+            return 400;
+        }
+
+        if(windowWidth <= 1350) {
+            return 500;
+        }
+
+        if(windowWidth <= 1500) {
+            return 600;
+        }
+
+        return 700;
+    }
+
     function handleHostNameChange(event: ChangeEvent<HTMLInputElement>) {
         const hostInputValue = event.target.value;
 
@@ -156,20 +193,20 @@ const ResponseTime = () => {
     }
 
     return (
-        <div className="networkStatusWrap">
-            <header>
-                <h1>Network status monitor</h1>
+        <div className={styles.networkStatusWrap}>
+            <header className={styles.networkStatusHeader}>
+                <h1 className={styles.networkStatusHeader__title}>Network status monitor</h1>
             </header>
-            <div className="networkStatusContainer">
-                    <h3>Stability: {continuityStatus}%</h3>
-                <div className="chartListWrap">
+            <div className={styles.networkStatusContainer}>
+                <h3 className={styles.networkStatusContainer__title}>Stability: {continuityStatus}%</h3>
+                <div className={styles.chartListWrap}>
                     <div>
                         <span>Latency <input type="text" value={hostName} onChange={handleHostNameChange}/></span>
-                        <Line data={googleChartData} options={responseChartOptions} style={{width: "700px"}}/> <br />
+                        <Line data={googleChartData} options={responseChartOptions} style={{width: `${getChartWidth()}px`}}/> <br />
                     </div>
                     <div>
                         <p>Jitter</p>
-                        <Line data={jitterChartData} options={jitterChartOptions} style={{width: "700px"}}/> 
+                        <Line data={jitterChartData} options={jitterChartOptions} style={{width: `${getChartWidth()}px`}}/> 
                     </div>
                 </div>
             </div>

@@ -1,4 +1,4 @@
-import ResponseTime from "./responseTime/ResponseTime1";
+import ResponseTime from "./responseTime/ResponseTime";
 
 import "./App.css";
 

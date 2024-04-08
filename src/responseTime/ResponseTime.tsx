@@ -4,7 +4,7 @@ import { Line } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement } from "chart.js";
 
 import { ChartData, ChartOptions, IResponseData } from "../types/RttTypes";
-import { getContinuityStatus, getCurrentTime } from "../utils/RttUtils1";
+import { getContinuityStatus, getCurrentTime } from "../utils/RttUtils";
 import {
 	aquaColor,
 	aquamarineColor,
@@ -12,9 +12,9 @@ import {
 	defaultHost,
 	deviceWidthList,
 	hostPattern,
-} from "../helpers/ResponseTime1";
+} from "../helpers/ResponseTimeHelpers";
 
-import styles from "./ResponseTime1.module.css";
+import styles from "./ResponseTime.module.css";
 
 const ping = new Ping();
 
